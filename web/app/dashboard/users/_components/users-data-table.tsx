@@ -27,6 +27,17 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogMedia,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Select,
   SelectTrigger,
   SelectValue,
@@ -39,7 +50,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/components/ui/toast";
-import { useAdminUsers } from "@/hooks/admin/use-admin-users";
+import { useAdminUsers, useDeleteUser } from "@/hooks/admin/use-admin-users";
 import { AdminUserListItem } from "@/types/user";
 import {
   Search,
@@ -57,8 +68,11 @@ import {
   ChevronsRight,
   AlertCircle,
   Mail,
+  Pencil,
+  Trash2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { UpdateUserDialog } from "./update-user-dialog";
 
 export function UsersDataTable() {
   const [page, setPage] = useState(0);
@@ -66,6 +80,12 @@ export function UsersDataTable() {
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // Güncelleme ve Silme modal durumları
+  const [userToEdit, setUserToEdit] = useState<AdminUserListItem | null>(null);
+  const [userToDelete, setUserToDelete] = useState<AdminUserListItem | null>(null);
+
+  const deleteUserMutation = useDeleteUser();
 
   // Arama girdisini debounce et (350ms)
   useEffect(() => {
@@ -111,6 +131,27 @@ export function UsersDataTable() {
     }
   };
 
+  const handleDeleteConfirm = () => {
+    if (!userToDelete) return;
+
+    deleteUserMutation.mutate(userToDelete.id, {
+      onSuccess: () => {
+        toast.add({
+          title: "Başarılı",
+          description: `"${userToDelete.firstName} ${userToDelete.lastName}" kullanıcısı başarıyla silindi.`,
+        });
+        setUserToDelete(null);
+      },
+      onError: (err: unknown) => {
+        toast.add({
+          title: "Hata",
+          description:
+            (err as Error)?.message || "Kullanıcı silinirken bir hata oluştu.",
+        });
+      },
+    });
+  };
+
   const formatRole = (role: string) => {
     const normalized = role?.toUpperCase() || "";
     if (normalized.includes("ADMIN")) {
@@ -140,7 +181,8 @@ export function UsersDataTable() {
   };
 
   return (
-    <Card className="w-full">
+    <>
+      <Card className="w-full">
       <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4">
         <div>
           <div className="flex items-center gap-2">
@@ -417,6 +459,23 @@ export function UsersDataTable() {
                                 <Mail className="size-3.5" />
                                 E-posta Kopyala
                               </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => setUserToEdit(user)}
+                                className="gap-2 cursor-pointer"
+                              >
+                                <Pencil className="size-3.5" />
+                                Düzenle
+                              </DropdownMenuItem>
+                            </DropdownMenuGroup>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuGroup>
+                              <DropdownMenuItem
+                                onClick={() => setUserToDelete(user)}
+                                className="gap-2 cursor-pointer text-destructive focus:text-destructive"
+                              >
+                                <Trash2 className="size-3.5" />
+                                Kullanıcıyı Sil
+                              </DropdownMenuItem>
                             </DropdownMenuGroup>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -484,5 +543,55 @@ export function UsersDataTable() {
         </div>
       </CardContent>
     </Card>
+
+    {/* Kullanıcı Düzenleme Modalı */}
+    {userToEdit && (
+      <UpdateUserDialog
+        user={userToEdit}
+        open={!!userToEdit}
+        onOpenChange={(open) => {
+          if (!open) setUserToEdit(null);
+        }}
+      />
+    )}
+
+    {/* Kullanıcı Silme Onay Modalı */}
+    <AlertDialog
+      open={!!userToDelete}
+      onOpenChange={(open) => {
+        if (!open) setUserToDelete(null);
+      }}
+    >
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogMedia className="text-destructive bg-destructive/10">
+            <AlertCircle className="size-5" />
+          </AlertDialogMedia>
+          <AlertDialogTitle>Kullanıcıyı Sil</AlertDialogTitle>
+          <AlertDialogDescription>
+            <strong className="text-foreground font-semibold">
+              "{userToDelete?.firstName} {userToDelete?.lastName}" ({userToDelete?.email})
+            </strong>{" "}
+            adlı kullanıcı hesabını sistemden silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter className="gap-2 sm:gap-2.5">
+          <AlertDialogCancel
+            disabled={deleteUserMutation.isPending}
+            onClick={() => setUserToDelete(null)}
+          >
+            Vazgeç
+          </AlertDialogCancel>
+          <AlertDialogAction
+            variant="destructive"
+            onClick={handleDeleteConfirm}
+            disabled={deleteUserMutation.isPending}
+          >
+            {deleteUserMutation.isPending ? "Siliniyor..." : "Evet, Sil"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }

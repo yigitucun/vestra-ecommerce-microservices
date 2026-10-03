@@ -63,3 +63,23 @@ export type LoginSchema = z.output<typeof loginSchema>
 export type RegisterSchema = z.output<typeof registerSchema>
 export type ForgotPasswordSchema = z.output<typeof forgotPasswordSchema>
 export type ResetPasswordSchema = z.output<typeof resetPasswordSchema>
+
+export interface UpdateUserPayload {
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: "ADMIN" | "CUSTOMER";
+  isActive: boolean;
+  password?: string;
+}
+
+export const updateUserSchema = z.object({
+  firstName: z.string().min(1, "Ad alanı zorunludur."),
+  lastName: z.string().min(1, "Soyad alanı zorunludur."),
+  email: z.string().email("Geçerli bir e-posta adresi giriniz."),
+  role: z.enum(["ADMIN", "CUSTOMER"]),
+  isActive: z.boolean(),
+  password: z.string().optional(),
+});
+
+export type UpdateUserFormValues = z.infer<typeof updateUserSchema>;

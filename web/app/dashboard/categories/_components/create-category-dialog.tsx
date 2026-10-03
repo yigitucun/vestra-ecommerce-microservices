@@ -131,7 +131,7 @@ export function CreateCategoryDialog({ trigger }: CreateCategoryDialogProps) {
           ) : (
             <Button size="sm" className="gap-1.5 h-8">
               <Plus className="size-4" />
-              <span>Yeni Kategori Ekle</span>
+              Yeni Kategori Ekle
             </Button>
           )
         }

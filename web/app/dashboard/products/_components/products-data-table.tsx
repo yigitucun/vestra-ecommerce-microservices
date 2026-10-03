@@ -522,10 +522,7 @@ export function ProductsDataTable() {
                               </DropdownMenuGroup>
                               <DropdownMenuSeparator />
                               <DropdownMenuGroup>
-                                <DropdownMenuItem
-                                  onClick={() => setProductToDelete(product)}
-                                  className="gap-2 cursor-pointer text-destructive focus:text-destructive"
-                                >
+                                <DropdownMenuItem variant={"destructive"} onClick={() => setProductToDelete(product)} className="cursor-pointer">
                                   <Trash2 className="size-3.5" />
                                   Ürünü Sil
                                 </DropdownMenuItem>

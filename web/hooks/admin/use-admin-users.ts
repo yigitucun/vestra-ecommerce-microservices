@@ -1,6 +1,6 @@
-import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { AdminUserListItem, PagedModel } from "@/types/user";
+import { AdminUserListItem, PagedModel, UpdateUserPayload } from "@/types/user";
 
 export interface UseAdminUsersParams {
     page?: number;
@@ -27,5 +27,28 @@ export function useAdminUsers({ page = 0, size = 15, search = "" }: UseAdminUser
             });
         },
         placeholderData: keepPreviousData,
+    });
+}
+
+export function useUpdateUser() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ id, payload }: { id: string; payload: UpdateUserPayload }) =>
+            api.put(`/admin/users/${id}`, payload),
+        onSuccess: () => {
+            void queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+        },
+    });
+}
+
+export function useDeleteUser() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (id: string) => api.delete(`/admin/users/${id}`),
+        onSuccess: () => {
+            void queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+        },
     });
 }
