@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: item-service
+  main:
+    banner-mode: off
+  datasource:
+    url: ${DATASOURCE_URL}
+    password: ${DB_PASSWORD}
+    username: ${DB_USER}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${JWK_SET_URI}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+server:
+  port: ${SERVER_PORT}
+logging:
+  level:
+    root: warn

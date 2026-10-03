@@ -1,0 +1,1 @@
+ALTER TABLE products ADD COLUMN slug varchar(255) UNIQUE;

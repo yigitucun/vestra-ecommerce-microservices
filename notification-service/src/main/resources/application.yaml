@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: notification-service
+  mail:
+    port: ${MAIL_PORT}
+    host: ${MAIL_HOST}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    from: ${MAIL_FROM}
+  main:
+    banner-mode: off
+logging:
+  level:
+    root: warn
+app:
+  client-url: ${CLIENT_URL}
+
+
+
+server:
+  port: ${SERVER_PORT}

@@ -1,0 +1,18 @@
+spring:
+  application:
+    name: gateway-service
+  main:
+    banner-mode: off
+logging:
+  level:
+    root: debug
+
+services:
+  auth-service-uri: ${SERVICES_AUTH_SERVICE_URI}
+  notification-service-uri: ${SERVICES_NOTIFICATION_SERVICE_URI}
+  product-service-uri: ${SERVICES_PRODUCT_SERVICE_URI}
+
+server:
+  port: ${SERVER_PORT}
+
+allowed-origins: ${ALLOWED_ORIGINS}

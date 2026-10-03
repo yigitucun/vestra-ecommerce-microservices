@@ -1,0 +1,58 @@
+spring:
+  cache:
+    type: redis
+  application:
+    name: auth-service
+  datasource:
+    url: ${DATASOURCE_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_SECRET}
+            scope:
+              - profile
+              - email
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+      password: ${REDIS_PASSWORD}
+  main:
+    banner-mode: off
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+logging:
+  level:
+    root: debug
+rsa:
+  private-key-location: classpath:certs/private_key.pem
+  public-key-location: classpath:certs/public_key.pem
+
+jwt:
+  issuer: ${JWT_ISSUER}
+  access-token-expiration-in: ${JWT_ACCESS_TOKEN_EXPIRES_IN}
+  refresh-token-expiration-in: ${JWT_REFRESH_TOKEN_EXPIRES_IN}
+  key-id: auth-key-1
+
+cookie:
+  secure: ${COOKIE_SECURE}
+  same-site: ${SAME_SITE}
+
+security:
+  login:
+    max-attempts: ${SECURITY_LOGIN_MAX_ATTEMPTS}
+    lockout-minutes: ${SECURITY_LOCKOUT_MINUTES}
+
+app:
+  client-url: ${CLIENT_URL}
+
+server:
+  port: ${SERVER_PORT}

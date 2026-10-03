@@ -1,0 +1,27 @@
+spring:
+  application:
+    name: product-service
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${JWK_SET_URI}
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+      password: ${REDIS_PASSWORD}
+  main:
+    banner-mode: off
+  datasource:
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+    url: ${DATASOURCE_URL}
+  jpa:
+    show-sql: true
+    open-in-view: false
+logging:
+  level:
+    root: warn
+server:
+  port: ${SERVER_PORT}
