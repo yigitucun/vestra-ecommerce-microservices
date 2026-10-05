@@ -387,8 +387,4 @@ Vestra mimarisi, yeni servislerin ve yeteneklerin kolayca eklenebileceği şekil
 - [ ] **Kubernetes (K8s) & Helm:**
   - Üretim ortamına hazır Kubernetes deployment manifestoları ve CI/CD pipeline'ları.
 
----
 
-<p align="center">
-  Geliştirici: <b>Vestra Team</b> • Mimari: <b>Event-Driven Microservices</b>
-</p>
