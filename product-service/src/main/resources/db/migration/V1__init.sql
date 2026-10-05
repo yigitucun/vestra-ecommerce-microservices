@@ -15,8 +15,7 @@ CREATE TABLE products
     name        varchar(255) NOT NULL,
     description TEXT,
     image_url   varchar(255),
-    category_id uuid         NOT NULL
-        REFERENCES categories (id) ON DELETE RESTRICT,
+    category_id uuid         NOT NULL REFERENCES categories (id) ON DELETE set null ,
     created_at  timestamptz  NOT NULL DEFAULT NOW(),
     updated_at  timestamptz  NOT NULL DEFAULT NOW()
 );

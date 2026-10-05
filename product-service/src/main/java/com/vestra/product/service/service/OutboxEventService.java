@@ -2,6 +2,7 @@ package com.vestra.product.service.service;
 
 import com.vestra.common.dto.OutboxEventDTO;
 import com.vestra.common.event.payloads.VariantCreatedPayload;
+import com.vestra.common.event.payloads.VariantDeletedPayload;
 import com.vestra.common.event.types.VariantEvents;
 import com.vestra.product.service.entity.OutboxEvent;
 import com.vestra.product.service.repository.OutboxEventRepository;
@@ -36,5 +37,14 @@ public class OutboxEventService {
         save(outboxEventDTO);
     }
 
+    public void createVariantDeletedEvent(String variantId) {
+        OutboxEventDTO outboxEventDTO = OutboxEventDTO.builder()
+                .eventType(VariantEvents.VARIANT_DELETED)
+                .aggregateType("Variant")
+                .payload(new VariantDeletedPayload(variantId))
+                .aggregateId(variantId)
+                .build();
+        save(outboxEventDTO);
+    }
 
 }

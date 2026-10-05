@@ -89,25 +89,35 @@ public class UpdateProductService {
                         .product(product)
                         .build();
                 syncAttributes(newVariant, variantReq);
-                product.getVariants().add(newVariant);
                 newVariantsToPublish.add(newVariant);
             }
         }
 
+        // Çıkarılan varyantların ID'lerini topla (mevcut varyantlardan kept listesinde olmayanlar)
+        List<UUID> removedVariantIds = existingVariantMap.keySet().stream()
+                .filter(variantId -> !keptVariantIds.contains(variantId))
+                .toList();
+
         // Çıkarılan varyantları kaldır
-        product.getVariants().removeIf(v -> v.getId() != null && !keptVariantIds.contains(v.getId()));
+        product.getVariants().removeIf(v -> v.getId() != null && removedVariantIds.contains(v.getId()));
+
+        // Yeni varyantları kaydet, product'a ekle ve item-service için event gönder
+        for (Variant newVariant : newVariantsToPublish) {
+            Variant savedVariant = variantRepository.saveAndFlush(newVariant);
+            product.getVariants().add(savedVariant);
+
+            eventService.createProductEvent(
+                    savedVariant.getId().toString(),
+                    savedVariant.getId().toString(),
+                    newVariant.getInitialStock()
+            );
+        }
 
         Product savedProduct = productRepository.save(product);
 
-        // Yeni eklenen varyantlar için item-service'e event gönder
-        for (Variant newVariant : newVariantsToPublish) {
-            if (newVariant.getId() != null) {
-                eventService.createProductEvent(
-                        newVariant.getId().toString(),
-                        newVariant.getId().toString(),
-                        newVariant.getInitialStock()
-                );
-            }
+        // Çıkarılan varyantlar için item-service'e delete event gönder
+        for (UUID removedVariantId : removedVariantIds) {
+            eventService.createVariantDeletedEvent(removedVariantId.toString());
         }
     }
 

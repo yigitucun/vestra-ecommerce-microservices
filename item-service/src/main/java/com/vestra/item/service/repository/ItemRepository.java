@@ -8,4 +8,5 @@ import java.util.UUID;
 
 @Repository
 public interface ItemRepository extends JpaRepository<Item, UUID> {
+    void deleteByVariantId(UUID variantId);
 }
