@@ -67,16 +67,27 @@ public class PaymentService {
                     throw ApiException.badRequest("Mükerrer Ödeme", "Bu sipariş için zaten başarılı bir ödeme kaydı bulunmaktadır");
                 });
 
-        String cleanCardNumber = request.cardNumber().replaceAll("\\s+", "");
-        String lastFour = cleanCardNumber.length() >= 4
-                ? cleanCardNumber.substring(cleanCardNumber.length() - 4)
-                : cleanCardNumber;
+        String lastFour;
+        boolean isDeclined;
 
-        // Test simülasyonu: Son 4 hanesi "0000" olan veya "4000000000000000" olan kartlar reddedilir
-        boolean isDeclined = cleanCardNumber.endsWith("0000") || cleanCardNumber.equals("4000000000000000");
+        if (request.paymentToken() != null && !request.paymentToken().isBlank()) {
+            // PSP Tokenization Akışı (Stripe / Iyzico / PayTR Hosted Form)
+            String token = request.paymentToken().trim();
+            lastFour = (request.cardLastFour() != null && !request.cardLastFour().isBlank())
+                    ? request.cardLastFour()
+                    : (token.length() >= 4 ? token.substring(token.length() - 4) : "4242");
+            isDeclined = token.toLowerCase().contains("declined") || token.endsWith("0000");
+        } else {
+            // Doğrudan Kart Bilgileri Akışı (Sandbox Simülasyonu)
+            String cleanCardNumber = request.cardNumber() != null ? request.cardNumber().replaceAll("\\s+", "") : "";
+            lastFour = cleanCardNumber.length() >= 4
+                    ? cleanCardNumber.substring(cleanCardNumber.length() - 4)
+                    : cleanCardNumber;
+            isDeclined = cleanCardNumber.endsWith("0000") || cleanCardNumber.equals("4000000000000000");
+        }
 
         if (isDeclined) {
-            log.warn("Ödeme simülasyonu: Banka işlemi reddetti. orderId={}", request.orderId());
+            log.warn("Ödeme simülasyonu: Banka veya PSP işlemi reddetti. orderId={}", request.orderId());
 
             Payment failedPayment = Payment.builder()
                     .orderId(request.orderId())
