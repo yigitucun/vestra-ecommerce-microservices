@@ -27,18 +27,22 @@ for file in /connectors/*.json; do
   echo "----------------------------------------------------------"
   echo "Checking connector: $connector_name"
 
+  # Substitute environment variable
+  payload=$(sed "s|\${POSTGRES_PASSWORD}|$POSTGRES_PASSWORD|g" "$file")
+
+  # Extract only config block for PUT update
+  config_json=$(echo "$payload" | sed -n '/"config"/,$p' | sed '1s/.*"config"[[:space:]]*:[[:space:]]*{//' | sed '$s/}[[:space:]]*}//' | sed '1s/^/{/')
+
   # Check if already registered
   status_code=$(curl -s -o /dev/null -w "%{http_code}" "$DEBEZIUM_URL/connectors/$connector_name")
 
   if [ "$status_code" -eq 200 ]; then
     echo "Connector '$connector_name' already exists. Updating config..."
-    # Extract config block and PUT to update
-    config_json=$(cat "$file" | sed -n '/"config"/,$p' | sed '1s/.*"config"[[:space:]]*:[[:space:]]*{//' | sed '$s/}[[:space:]]*}//' | sed '1s/^/{/')
-    curl -s -X PUT -H "Content-Type: application/json" -d @"$file" "$DEBEZIUM_URL/connectors/$connector_name/config" > /dev/null
+    curl -s -X PUT -H "Content-Type: application/json" -d "$config_json" "$DEBEZIUM_URL/connectors/$connector_name/config" > /dev/null
     echo "Connector '$connector_name' updated successfully."
   else
     echo "Registering new connector '$connector_name'..."
-    response=$(curl -s -w "\n%{http_code}" -X POST -H "Content-Type: application/json" -d @"$file" "$DEBEZIUM_URL/connectors")
+    response=$(curl -s -w "\n%{http_code}" -X POST -H "Content-Type: application/json" -d "$payload" "$DEBEZIUM_URL/connectors")
     http_code=$(echo "$response" | tail -n1)
     if [ "$http_code" -eq 201 ] || [ "$http_code" -eq 200 ]; then
       echo "Connector '$connector_name' registered successfully (HTTP $http_code)."

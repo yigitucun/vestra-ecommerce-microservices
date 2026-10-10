@@ -1,5 +1,5 @@
 {
-  "name": "auth-outbox-connector",
+  "name": "product-outbox-connector",
   "config": {
     "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
     "tasks.max": "1",
@@ -7,9 +7,9 @@
     "database.port": "5432",
     "database.user": "postgres",
     "database.password": "${POSTGRES_PASSWORD}",
-    "database.dbname": "auth_db",
-    "topic.prefix": "vestra_auth_server",
-    "slot.name": "auth_outbox_slot",
+    "database.dbname": "product_db",
+    "topic.prefix": "vestra_product_server",
+    "slot.name": "product_outbox_slot",
     "schema.include.list": "public",
     "table.include.list": "public.outbox_events",
     "plugin.name": "pgoutput",
@@ -30,6 +30,6 @@
     "transforms.outbox.table.fields.additional.placement": "event_type:header:event_type",
 
     "transforms.outbox.route.by.field": "aggregate_type",
-    "transforms.outbox.route.topic.replacement": "user.events"
+    "transforms.outbox.route.topic.replacement": "product.events"
   }
 }

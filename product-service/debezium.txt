@@ -6,7 +6,7 @@
     "database.hostname": "postgres",
     "database.port": "5432",
     "database.user": "postgres",
-    "database.password": "b7kk3cTuuX5n2LHy9fLTwFL2uMSvY4emQEn3XPqv3vg=",
+    "database.password": "${POSTGRES_PASSWORD}",
     "database.dbname": "product_db",
     "topic.prefix": "vestra_product_server",
     "slot.name": "product_outbox_slot",

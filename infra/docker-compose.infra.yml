@@ -108,6 +108,8 @@ services:
     restart: "no"
     depends_on:
       - debezium
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - ./debezium/connectors:/connectors:ro
       - ./debezium/register-connectors.sh:/register-connectors.sh:ro
