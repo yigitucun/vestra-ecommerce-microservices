@@ -61,6 +61,9 @@ services:
       KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
       KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
       CLUSTER_ID: '${KAFKA_CLUSTER_ID}'
+      KAFKA_AUTHORIZER_CLASS_NAME: 'org.apache.kafka.metadata.authorizer.StandardAuthorizer'
+      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: '${KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND:-true}'
+      KAFKA_SUPER_USERS: 'User:${KAFKA_SUPER_USER:-admin}'
     volumes:
       - kafka_data:/var/lib/kafka/data
     networks:
