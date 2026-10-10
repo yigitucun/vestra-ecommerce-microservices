@@ -21,6 +21,10 @@ public class Router {
                         .path("/api/auth/**")
                         .uri(urisConfig.getAuthServiceUri())
                 )
+                .route("auth-oauth2-route", r -> r
+                        .path("/login/oauth2/**", "/oauth2/**")
+                        .uri(urisConfig.getAuthServiceUri())
+                )
                 .route("product-public-route",r -> r
                         .path("/api/products/**")
                         .uri(urisConfig.getProductServiceUri())

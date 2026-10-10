@@ -58,3 +58,4 @@ app:
 
 server:
   port: ${SERVER_PORT}
+  forward-headers-strategy: framework

@@ -33,6 +33,9 @@ public class SecurityConfig {
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
         );
         http.oauth2Login(oauth2 -> oauth2
+                .authorizationEndpoint(authorization -> authorization
+                        .baseUri("/api/auth/oauth2/authorization")
+                )
                 .userInfoEndpoint(userInfo -> userInfo.userService(oauth2UserService))
                 .successHandler(oAuth2LoginSuccessHandler)
         );
@@ -40,7 +43,7 @@ public class SecurityConfig {
             jwt.jwtAuthenticationConverter(jwtAuthenticationConverter());
         }));
         http.authorizeHttpRequests(request -> request
-                .requestMatchers("/api/auth/**","/.well-known/jwks.json").permitAll()
+                .requestMatchers("/api/auth/**", "/oauth2/**", "/login/oauth2/**", "/.well-known/jwks.json").permitAll()
                 .requestMatchers("/api/admin/users/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
         );
