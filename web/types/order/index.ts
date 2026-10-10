@@ -2,11 +2,13 @@ export type OrderStatus =
   | "PENDING"
   | "STOCK_CONFIRMED"
   | "STOCK_FAILED"
+  | "PAYMENT_PENDING"
   | "PAID"
   | "PAYMENT_FAILED"
   | "SHIPPED"
   | "DELIVERED"
-  | "CANCELLED";
+  | "CANCELLED"
+  | "COMPLETED";
 
 export interface OrderItem {
   id: string;

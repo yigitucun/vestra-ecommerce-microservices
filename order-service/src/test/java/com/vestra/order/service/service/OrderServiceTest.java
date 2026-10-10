@@ -254,6 +254,25 @@ class OrderServiceTest {
     }
 
     @Test
+    void shouldThrowBadRequestWhenCancellingShippedOrder() {
+        UUID orderId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+
+        Order order = Order.builder()
+                .id(orderId)
+                .orderNumber("ORD-888")
+                .userId(userId)
+                .status(OrderStatus.SHIPPED)
+                .build();
+
+        when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
+
+        ApiException ex = assertThrows(ApiException.class, () -> orderService.cancelOrder(orderId, userId, "İptal", false));
+        assertEquals("Geçersiz İşlem", ex.getTitle());
+        verify(orderRepository, never()).save(any());
+    }
+
+    @Test
     void shouldUpdateOrderStatus() {
         UUID orderId = UUID.randomUUID();
         Order order = Order.builder()
@@ -263,9 +282,9 @@ class OrderServiceTest {
 
         when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
 
-        orderService.updateOrderStatus(orderId, OrderStatus.STOCK_CONFIRMED);
+        orderService.updateOrderStatus(orderId, OrderStatus.SHIPPED);
 
-        assertEquals(OrderStatus.STOCK_CONFIRMED, order.getStatus());
+        assertEquals(OrderStatus.SHIPPED, order.getStatus());
         verify(orderRepository).save(order);
     }
 }

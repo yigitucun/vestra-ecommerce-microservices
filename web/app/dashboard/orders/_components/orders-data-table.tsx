@@ -84,6 +84,12 @@ const STATUS_CONFIG: Record<
     icon: <XCircle className="h-3.5 w-3.5" />,
     colorClass: "border-red-400 bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300",
   },
+  PAYMENT_PENDING: {
+    label: "Ödeme Bekleniyor",
+    variant: "outline",
+    icon: <Clock className="h-3.5 w-3.5 text-amber-500" />,
+    colorClass: "border-amber-400 bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300",
+  },
   PAID: {
     label: "Ödendi",
     variant: "outline",
@@ -113,6 +119,12 @@ const STATUS_CONFIG: Record<
     variant: "outline",
     icon: <XCircle className="h-3.5 w-3.5 text-zinc-500" />,
     colorClass: "border-zinc-300 bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400",
+  },
+  COMPLETED: {
+    label: "Tamamlandı",
+    variant: "outline",
+    icon: <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />,
+    colorClass: "border-emerald-500 bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200",
   },
 };
 
@@ -268,10 +280,12 @@ export function OrdersDataTable() {
                 <SelectItem value="PENDING">Beklemede</SelectItem>
                 <SelectItem value="STOCK_CONFIRMED">Stok Onaylandı</SelectItem>
                 <SelectItem value="STOCK_FAILED">Stok Yetersiz</SelectItem>
+                <SelectItem value="PAYMENT_PENDING">Ödeme Bekleniyor</SelectItem>
                 <SelectItem value="PAID">Ödendi</SelectItem>
                 <SelectItem value="PAYMENT_FAILED">Ödeme Başarısız</SelectItem>
                 <SelectItem value="SHIPPED">Kargoya Verildi</SelectItem>
                 <SelectItem value="DELIVERED">Teslim Edildi</SelectItem>
+                <SelectItem value="COMPLETED">Tamamlandı</SelectItem>
                 <SelectItem value="CANCELLED">İptal Edildi</SelectItem>
               </SelectContent>
             </Select>
@@ -432,6 +446,13 @@ export function OrdersDataTable() {
                               >
                                 <CheckCircle2 className="h-4 w-4 mr-2 text-emerald-600" />
                                 Teslim Edildi
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleStatusChange(order.id, "COMPLETED")}
+                                disabled={order.status === "COMPLETED"}
+                              >
+                                <CheckCircle2 className="h-4 w-4 mr-2 text-emerald-600" />
+                                Tamamlandı
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
                               <DropdownMenuItem

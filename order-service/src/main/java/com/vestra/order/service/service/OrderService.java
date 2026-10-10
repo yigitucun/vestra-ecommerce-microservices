@@ -186,8 +186,8 @@ public class OrderService {
             throw ApiException.badRequest("Geçersiz İşlem", "Sipariş zaten iptal edilmiş.");
         }
 
-        if (order.getStatus() == OrderStatus.COMPLETED) {
-            throw ApiException.badRequest("Geçersiz İşlem", "Tamamlanmış sipariş iptal edilemez.");
+        if (order.getStatus() == OrderStatus.COMPLETED || order.getStatus() == OrderStatus.SHIPPED || order.getStatus() == OrderStatus.DELIVERED) {
+            throw ApiException.badRequest("Geçersiz İşlem", "Tamamlanmış, kargoya verilmiş veya teslim edilmiş sipariş iptal edilemez.");
         }
 
         order.setStatus(OrderStatus.CANCELLED);
