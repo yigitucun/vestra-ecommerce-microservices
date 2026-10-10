@@ -31,7 +31,7 @@ public class AuthController {
 
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request){
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request){
         AuthResponse response = this.authService.login(request);
         HttpHeaders headers = new HttpHeaders();
         cookieUtils.addAuthCookies(headers,response);
