@@ -22,3 +22,6 @@ server:
 logging:
   level:
     root: info
+
+services:
+  order-service-url: ${SERVICES_ORDER_SERVICE_URI:http://localhost:8083}

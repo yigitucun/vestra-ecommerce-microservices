@@ -208,4 +208,17 @@ public class OrderService {
                 releaseItems
         ));
     }
+
+    @Transactional(readOnly = true)
+    public com.vestra.order.service.dto.OrderVerificationResponse getOrderForVerification(UUID orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> ApiException.notFound("Sipariş Bulunamadı", "Sipariş bulunamadı: " + orderId));
+        return new com.vestra.order.service.dto.OrderVerificationResponse(
+                order.getId(),
+                order.getOrderNumber(),
+                order.getUserId(),
+                order.getTotalAmount(),
+                order.getStatus()
+        );
+    }
 }

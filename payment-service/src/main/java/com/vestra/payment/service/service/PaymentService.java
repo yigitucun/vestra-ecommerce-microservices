@@ -18,6 +18,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.UUID;
 
+import com.vestra.payment.service.client.OrderServiceClient;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -25,13 +27,41 @@ public class PaymentService {
 
     private final PaymentRepository paymentRepository;
     private final OutboxEventService outboxEventService;
+    private final OrderServiceClient orderServiceClient;
 
     @Transactional
     public PaymentResponse processPayment(UUID userId, ProcessPaymentRequest request) {
-        log.info("Ödeme işlemi başlatılıyor: orderId={}, orderNumber={}, amount={}",
-                request.orderId(), request.orderNumber(), request.amount());
+        log.info("Ödeme işlemi başlatılıyor: orderId={}, orderNumber={}, amount={}, userId={}",
+                request.orderId(), request.orderNumber(), request.amount(), userId);
 
-        // Sipariş için zaten başarılı bir ödeme var mı kontrolü
+        // 1. Siparişi order-service üzerinden doğrula
+        OrderServiceClient.OrderDetails order = orderServiceClient.getOrder(request.orderId());
+        if (order == null) {
+            throw ApiException.notFound("Sipariş Bulunamadı", "Sipariş bilgileri doğrulanamadı: " + request.orderId());
+        }
+
+        // 2. IDOR Koruması: Sipariş gerçekten bu kullanıcıya mı ait?
+        if (!order.userId().equals(userId)) {
+            log.warn("[GÜVENLİK İHLALİ] IDOR tespiti! Kullanıcı={}, başkasına ait siparişi ödemeye çalıştı: orderId={}, gerçekSahip={}",
+                    userId, request.orderId(), order.userId());
+            throw ApiException.unAuthorized("Yetkisiz Erişim", "Bu sipariş için ödeme yapma yetkiniz bulunmamaktadır.");
+        }
+
+        // 3. Sipariş Durumu Kontrolü: Sipariş beklemede (PENDING) mi?
+        if (!"PENDING".equalsIgnoreCase(order.status())) {
+            log.warn("[GÜVENLİK İHLALİ] Geçersiz durumdaki siparişe ödeme denendi: orderId={}, durum={}",
+                    request.orderId(), order.status());
+            throw ApiException.badRequest("Geçersiz Sipariş Durumu", "Sadece beklemede (PENDING) olan siparişler için ödeme yapılabilir. Mevcut durum: " + order.status());
+        }
+
+        // 4. Amount Tampering Koruması: Ödenmek istenen tutar siparişin gerçek tutarıyla birebir eşleşiyor mu?
+        if (request.amount().compareTo(order.totalAmount()) != 0) {
+            log.warn("[GÜVENLİK İHLALİ] Ödeme tutarı manipülasyonu engellendi! orderId={}, gönderilenTutar={}, gerçekTutar={}",
+                    request.orderId(), request.amount(), order.totalAmount());
+            throw ApiException.badRequest("Tutar Uyuşmazlığı", "Ödeme tutarı sipariş tutarı ile uyuşmuyor. Beklenen tutar: " + order.totalAmount());
+        }
+
+        // 5. Sipariş için zaten başarılı bir ödeme var mı kontrolü
         paymentRepository.findByOrderIdAndStatus(request.orderId(), PaymentStatus.SUCCESS)
                 .ifPresent(p -> {
                     throw ApiException.badRequest("Mükerrer Ödeme", "Bu sipariş için zaten başarılı bir ödeme kaydı bulunmaktadır");

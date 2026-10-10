@@ -1,6 +1,7 @@
 package com.vestra.payment.service.service;
 
 import com.vestra.common.web.exception.ApiException;
+import com.vestra.payment.service.client.OrderServiceClient;
 import com.vestra.payment.service.dto.PaymentResponse;
 import com.vestra.payment.service.dto.ProcessPaymentRequest;
 import com.vestra.payment.service.dto.RefundPaymentRequest;
@@ -31,6 +32,9 @@ class PaymentServiceTest {
     @Mock
     private OutboxEventService outboxEventService;
 
+    @Mock
+    private OrderServiceClient orderServiceClient;
+
     @InjectMocks
     private PaymentService paymentService;
 
@@ -38,6 +42,15 @@ class PaymentServiceTest {
     void shouldProcessPaymentSuccessfully() {
         UUID userId = UUID.randomUUID();
         UUID orderId = UUID.randomUUID();
+
+        OrderServiceClient.OrderDetails orderDetails = new OrderServiceClient.OrderDetails(
+                orderId,
+                "ORD-12345",
+                userId,
+                BigDecimal.valueOf(1500),
+                "PENDING"
+        );
+        when(orderServiceClient.getOrder(orderId)).thenReturn(orderDetails);
 
         ProcessPaymentRequest request = new ProcessPaymentRequest(
                 orderId,
@@ -71,9 +84,115 @@ class PaymentServiceTest {
     }
 
     @Test
+    void shouldRejectPaymentWhenOrderDoesNotBelongToUser_IDOR() {
+        UUID currentUserId = UUID.randomUUID();
+        UUID realOwnerUserId = UUID.randomUUID();
+        UUID orderId = UUID.randomUUID();
+
+        OrderServiceClient.OrderDetails orderDetails = new OrderServiceClient.OrderDetails(
+                orderId,
+                "ORD-12345",
+                realOwnerUserId,
+                BigDecimal.valueOf(1500),
+                "PENDING"
+        );
+        when(orderServiceClient.getOrder(orderId)).thenReturn(orderDetails);
+
+        ProcessPaymentRequest request = new ProcessPaymentRequest(
+                orderId,
+                "ORD-12345",
+                BigDecimal.valueOf(1500),
+                PaymentMethod.CREDIT_CARD,
+                "5432543254325432",
+                "Ahmet Yılmaz",
+                "12",
+                "28",
+                "123"
+        );
+
+        ApiException ex = assertThrows(ApiException.class, () -> paymentService.processPayment(currentUserId, request));
+        assertEquals("Yetkisiz Erişim", ex.getTitle());
+        verify(paymentRepository, never()).save(any());
+        verify(outboxEventService, never()).publishPaymentCompletedEvent(any());
+    }
+
+    @Test
+    void shouldRejectPaymentWhenAmountDoesNotMatchOrder_AmountTampering() {
+        UUID userId = UUID.randomUUID();
+        UUID orderId = UUID.randomUUID();
+
+        OrderServiceClient.OrderDetails orderDetails = new OrderServiceClient.OrderDetails(
+                orderId,
+                "ORD-12345",
+                userId,
+                BigDecimal.valueOf(1500),
+                "PENDING"
+        );
+        when(orderServiceClient.getOrder(orderId)).thenReturn(orderDetails);
+
+        // Saldırgan 1500 TL sipariş için 1 TL ödeme yapmaya çalışıyor
+        ProcessPaymentRequest request = new ProcessPaymentRequest(
+                orderId,
+                "ORD-12345",
+                BigDecimal.valueOf(1),
+                PaymentMethod.CREDIT_CARD,
+                "5432543254325432",
+                "Ahmet Yılmaz",
+                "12",
+                "28",
+                "123"
+        );
+
+        ApiException ex = assertThrows(ApiException.class, () -> paymentService.processPayment(userId, request));
+        assertEquals("Tutar Uyuşmazlığı", ex.getTitle());
+        verify(paymentRepository, never()).save(any());
+        verify(outboxEventService, never()).publishPaymentCompletedEvent(any());
+    }
+
+    @Test
+    void shouldRejectPaymentWhenOrderStatusIsNotPending() {
+        UUID userId = UUID.randomUUID();
+        UUID orderId = UUID.randomUUID();
+
+        OrderServiceClient.OrderDetails orderDetails = new OrderServiceClient.OrderDetails(
+                orderId,
+                "ORD-12345",
+                userId,
+                BigDecimal.valueOf(1500),
+                "CANCELLED"
+        );
+        when(orderServiceClient.getOrder(orderId)).thenReturn(orderDetails);
+
+        ProcessPaymentRequest request = new ProcessPaymentRequest(
+                orderId,
+                "ORD-12345",
+                BigDecimal.valueOf(1500),
+                PaymentMethod.CREDIT_CARD,
+                "5432543254325432",
+                "Ahmet Yılmaz",
+                "12",
+                "28",
+                "123"
+        );
+
+        ApiException ex = assertThrows(ApiException.class, () -> paymentService.processPayment(userId, request));
+        assertEquals("Geçersiz Sipariş Durumu", ex.getTitle());
+        verify(paymentRepository, never()).save(any());
+    }
+
+    @Test
     void shouldFailAndPublishFailedEventWhenCardDeclined() {
         UUID userId = UUID.randomUUID();
         UUID orderId = UUID.randomUUID();
+
+        OrderServiceClient.OrderDetails orderDetails = new OrderServiceClient.OrderDetails(
+                orderId,
+                "ORD-99999",
+                userId,
+                BigDecimal.valueOf(500),
+                "PENDING"
+        );
+        when(orderServiceClient.getOrder(orderId)).thenReturn(orderDetails);
 
         // Son 4 hanesi "0000" olan kart simülasyonda reddedilir
         ProcessPaymentRequest request = new ProcessPaymentRequest(
@@ -106,6 +225,15 @@ class PaymentServiceTest {
     void shouldThrowBadRequestWhenOrderAlreadyPaid() {
         UUID userId = UUID.randomUUID();
         UUID orderId = UUID.randomUUID();
+
+        OrderServiceClient.OrderDetails orderDetails = new OrderServiceClient.OrderDetails(
+                orderId,
+                "ORD-12345",
+                userId,
+                BigDecimal.valueOf(1500),
+                "PENDING"
+        );
+        when(orderServiceClient.getOrder(orderId)).thenReturn(orderDetails);
 
         ProcessPaymentRequest request = new ProcessPaymentRequest(
                 orderId,
