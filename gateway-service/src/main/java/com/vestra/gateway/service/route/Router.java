@@ -48,6 +48,30 @@ public class Router {
                         .path("/api/admin/products/**")
                         .uri(urisConfig.getProductServiceUri())
                 )
+                .route("item-public-route", r -> r
+                        .path("/api/items/**")
+                        .uri(urisConfig.getItemServiceUri())
+                )
+                .route("item-admin-route", r -> r
+                        .path("/api/admin/items/**")
+                        .uri(urisConfig.getItemServiceUri())
+                )
+                .route("order-public-route", r -> r
+                        .path("/api/orders/**")
+                        .uri(urisConfig.getOrderServiceUri())
+                )
+                .route("order-admin-route", r -> r
+                        .path("/api/admin/orders/**")
+                        .uri(urisConfig.getOrderServiceUri())
+                )
+                .route("payment-public-route", r -> r
+                        .path("/api/payments/**")
+                        .uri(urisConfig.getPaymentServiceUri())
+                )
+                .route("payment-admin-route", r -> r
+                        .path("/api/admin/payments/**")
+                        .uri(urisConfig.getPaymentServiceUri())
+                )
                 .build();
     }
 

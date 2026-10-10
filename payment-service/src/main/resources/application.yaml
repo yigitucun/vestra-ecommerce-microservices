@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: payment-service
+  main:
+    banner-mode: off
+  datasource:
+    url: ${DATASOURCE_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${JWK_SET_URI}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+server:
+  port: ${SERVER_PORT}
+logging:
+  level:
+    root: info

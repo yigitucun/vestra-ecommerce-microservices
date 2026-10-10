@@ -13,4 +13,7 @@ public class ServiceUrisConfig {
     private String authServiceUri;
     private String notificationServiceUri;
     private String productServiceUri;
+    private String itemServiceUri;
+    private String orderServiceUri;
+    private String paymentServiceUri;
 }

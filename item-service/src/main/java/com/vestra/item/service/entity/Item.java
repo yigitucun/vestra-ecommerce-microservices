@@ -4,6 +4,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import lombok.*;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -28,6 +29,8 @@ public class Item {
     private int reserved = 0;
     @Builder.Default
     private boolean active=true;
+    @Version
+    private Long version;
     @UpdateTimestamp
     private Instant updatedAt;
 }

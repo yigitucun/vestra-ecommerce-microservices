@@ -1,0 +1,8 @@
+.git
+.idea
+.gradle
+**/build
+**/.gradle
+web/node_modules
+web/.next
+*.log

@@ -93,7 +93,16 @@ async function fetchWrapper<T>(endpoint: string, options: FetchOptions = {}): Pr
         } catch (refreshError) {
           isRefreshing = false;
           processQueue(refreshError);
-          window.location.href="/auth/login"
+
+          if (typeof document !== "undefined") {
+            document.cookie = "is_authenticated=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+            document.cookie = "access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+          }
+
+          if (typeof window !== "undefined" && !window.location.pathname.startsWith("/auth")) {
+            window.location.href = "/auth/login";
+          }
+
           throw new ApiError("Oturum süresi doldu, lütfen tekrar giriş yapın.", 401, {});
         }
       }

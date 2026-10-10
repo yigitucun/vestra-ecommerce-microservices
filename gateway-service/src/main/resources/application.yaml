@@ -11,6 +11,9 @@ services:
   auth-service-uri: ${SERVICES_AUTH_SERVICE_URI}
   notification-service-uri: ${SERVICES_NOTIFICATION_SERVICE_URI}
   product-service-uri: ${SERVICES_PRODUCT_SERVICE_URI}
+  item-service-uri: ${SERVICES_ITEM_SERVICE_URI:http://localhost:8085}
+  order-service-uri: ${SERVICES_ORDER_SERVICE_URI:http://localhost:8086}
+  payment-service-uri: ${SERVICES_PAYMENT_SERVICE_URI:http://localhost:8087}
 
 server:
   port: ${SERVER_PORT}

@@ -1,0 +1,166 @@
+name: vestra
+
+include:
+  - infra/docker-compose.infra.yml
+
+networks:
+  vestra-network:
+    name: ${NETWORK_NAME:-vestra-network}
+    driver: bridge
+
+services:
+  auth-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: auth-service
+    container_name: vestra-auth-service
+    restart: unless-stopped
+    env_file:
+      - auth-service/.env
+    depends_on:
+      postgres:
+        condition: service_started
+      redis:
+        condition: service_started
+      kafka:
+        condition: service_started
+    networks:
+      - vestra-network
+
+  product-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: product-service
+    container_name: vestra-product-service
+    restart: unless-stopped
+    env_file:
+      - product-service/.env
+    depends_on:
+      postgres:
+        condition: service_started
+      redis:
+        condition: service_started
+      auth-service:
+        condition: service_started
+    networks:
+      - vestra-network
+
+  item-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: item-service
+    container_name: vestra-item-service
+    restart: unless-stopped
+    env_file:
+      - item-service/.env
+    depends_on:
+      postgres:
+        condition: service_started
+      kafka:
+        condition: service_started
+      auth-service:
+        condition: service_started
+    networks:
+      - vestra-network
+
+  order-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: order-service
+    container_name: vestra-order-service
+    restart: unless-stopped
+    env_file:
+      - order-service/.env
+    depends_on:
+      postgres:
+        condition: service_started
+      kafka:
+        condition: service_started
+      auth-service:
+        condition: service_started
+    networks:
+      - vestra-network
+
+  payment-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: payment-service
+    container_name: vestra-payment-service
+    restart: unless-stopped
+    env_file:
+      - payment-service/.env
+    depends_on:
+      postgres:
+        condition: service_started
+      kafka:
+        condition: service_started
+      auth-service:
+        condition: service_started
+    networks:
+      - vestra-network
+
+  notification-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: notification-service
+    container_name: vestra-notification-service
+    restart: unless-stopped
+    env_file:
+      - notification-service/.env
+    depends_on:
+      kafka:
+        condition: service_started
+      mailpit:
+        condition: service_started
+    networks:
+      - vestra-network
+
+  gateway-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: gateway-service
+    container_name: vestra-gateway-service
+    restart: unless-stopped
+    env_file:
+      - gateway-service/.env
+    depends_on:
+      auth-service:
+        condition: service_started
+      product-service:
+        condition: service_started
+      item-service:
+        condition: service_started
+      order-service:
+        condition: service_started
+      payment-service:
+        condition: service_started
+    networks:
+      - vestra-network
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_BASE_URL: ${NEXT_PUBLIC_BASE_URL:-http://localhost:8080/api}
+    container_name: vestra-web
+    restart: unless-stopped
+    depends_on:
+      gateway-service:
+        condition: service_started
+    networks:
+      - vestra-network

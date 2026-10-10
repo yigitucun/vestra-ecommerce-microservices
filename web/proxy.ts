@@ -30,12 +30,12 @@ export function proxy(request: NextRequest) {
 
   const accessToken = request.cookies.get("access_token")?.value;
   const hasRefreshToken = request.cookies.has("refresh_token");
-  const hasAuthFlag = request.cookies.get("is_authenticated")?.value === "true";
 
   const payload = accessToken ? parseJwt(accessToken) : null;
+  const now = Math.floor(Date.now() / 1000);
+  const isTokenExpired = payload?.exp ? payload.exp <= now : false;
+  const hasValidAccessToken = !!accessToken && !isTokenExpired;
   const role = payload?.role;
-
-  const isAuthenticated = !!accessToken || hasRefreshToken || hasAuthFlag;
 
   // OAuth2 geri dönüş (exchange) rotasını middleware kontrolünden muaf tut
   if (pathname.startsWith("/oauth2")) {
@@ -44,14 +44,16 @@ export function proxy(request: NextRequest) {
 
   // Dashboard rotaları - Sadece ADMIN rolüne sahip kullanıcılar erişebilir
   if (pathname.startsWith("/dashboard")) {
-    if (!isAuthenticated) {
+    if (!hasValidAccessToken && !hasRefreshToken) {
       const loginUrl = new URL("/auth/login", request.url);
       loginUrl.searchParams.set("redirect", pathname);
-      return NextResponse.redirect(loginUrl);
+      const res = NextResponse.redirect(loginUrl);
+      res.cookies.delete("is_authenticated");
+      return res;
     }
 
-    // Giriş yapılmış fakat ADMIN yetkisi yoksa (örn. CUSTOMER), dashboard'a erişimi engelle
-    if (role !== "ADMIN") {
+    // Geçerli bir token var ama ADMIN değilse ana sayfaya yönlendir
+    if (hasValidAccessToken && role !== "ADMIN") {
       return NextResponse.redirect(new URL("/", request.url));
     }
 
@@ -64,13 +66,22 @@ export function proxy(request: NextRequest) {
     pathname.startsWith("/auth/signup") ||
     pathname.startsWith("/auth/forgot-password");
 
-  if (isAuthenticated && isAuthGuestRoute) {
-    if (role === "ADMIN") {
-      return NextResponse.redirect(new URL("/dashboard", request.url));
+  if (isAuthGuestRoute) {
+    // SADECE geçerli ve süresi dolmamış bir access token varsa yönlendir
+    if (hasValidAccessToken) {
+      if (role === "ADMIN") {
+        return NextResponse.redirect(new URL("/dashboard", request.url));
+      }
+      return NextResponse.redirect(new URL("/", request.url));
     }
-    return NextResponse.redirect(new URL("/", request.url));
-  }
 
+    // Token yoksa veya süresi dolmuşsa login sayfasını aç ve bayat auth bayrağını temizle
+    const res = NextResponse.next();
+    if (!hasRefreshToken) {
+      res.cookies.delete("is_authenticated");
+    }
+    return res;
+  }
 
   return NextResponse.next();
 }

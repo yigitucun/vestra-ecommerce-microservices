@@ -1,8 +1,8 @@
 
 networks:
   vestra-network:
-    name: ${NETWORK_NAME}
-    external: true
+    name: ${NETWORK_NAME:-vestra-network}
+    driver: bridge
 
 volumes:
   postgres_data:
@@ -99,6 +99,19 @@ services:
     depends_on:
       - kafka
       - postgres
+    networks:
+      - vestra-network
+
+  debezium-init:
+    image: curlimages/curl:latest
+    container_name: vestra-debezium-init
+    restart: "no"
+    depends_on:
+      - debezium
+    volumes:
+      - ./debezium/connectors:/connectors:ro
+      - ./debezium/register-connectors.sh:/register-connectors.sh:ro
+    entrypoint: ["/bin/sh", "/register-connectors.sh"]
     networks:
       - vestra-network
 

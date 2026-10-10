@@ -5,7 +5,9 @@ include(
     "notification-service",
     "product-service",
     "gateway-service",
-    "item-service"
+    "item-service",
+    "order-service",
+    "payment-service"
 )
 include("common")
 include("common-web")
