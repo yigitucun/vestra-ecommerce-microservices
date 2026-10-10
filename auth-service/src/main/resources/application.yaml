@@ -35,8 +35,8 @@ logging:
 rsa:
   private-key: ${RSA_PRIVATE_KEY:}
   public-key: ${RSA_PUBLIC_KEY:}
-  private-key-location: ${RSA_PRIVATE_KEY_LOCATION:}
-  public-key-location: ${RSA_PUBLIC_KEY_LOCATION:}
+  private-key-location: ${RSA_PRIVATE_KEY_LOCATION:classpath:certs/private_key.pem}
+  public-key-location: ${RSA_PUBLIC_KEY_LOCATION:classpath:certs/public_key.pem}
 
 jwt:
   issuer: ${JWT_ISSUER:vestra-auth-service}
