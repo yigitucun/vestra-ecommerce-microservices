@@ -33,14 +33,16 @@ logging:
   level:
     root: debug
 rsa:
-  private-key-location: classpath:certs/private_key.pem
-  public-key-location: classpath:certs/public_key.pem
+  private-key: ${RSA_PRIVATE_KEY:}
+  public-key: ${RSA_PUBLIC_KEY:}
+  private-key-location: ${RSA_PRIVATE_KEY_LOCATION:}
+  public-key-location: ${RSA_PUBLIC_KEY_LOCATION:}
 
 jwt:
-  issuer: ${JWT_ISSUER}
-  access-token-expiration-in: ${JWT_ACCESS_TOKEN_EXPIRES_IN}
-  refresh-token-expiration-in: ${JWT_REFRESH_TOKEN_EXPIRES_IN}
-  key-id: auth-key-1
+  issuer: ${JWT_ISSUER:vestra-auth-service}
+  access-token-expiration-in: ${JWT_ACCESS_TOKEN_EXPIRES_IN:${JWT_ACCESS_TOKEN_EXPIRESS_IN:15}}
+  refresh-token-expiration-in: ${JWT_REFRESH_TOKEN_EXPIRES_IN:${JWT_REFRESH_TOKEN_EXPIRESS_IN:7}}
+  key-id: ${JWT_KEY_ID:auth-key-1}
 
 cookie:
   secure: ${COOKIE_SECURE}
