@@ -22,6 +22,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import com.vestra.order.service.client.ProductServiceClient;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -31,10 +33,17 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final OutboxEventService outboxEventService;
+    private final ProductServiceClient productServiceClient;
 
     @Transactional
     public OrderResponse createOrder(UUID userId, CreateOrderRequest request) {
         String orderNumber = "ORD-" + System.currentTimeMillis() + "-" + UUID.randomUUID().toString().substring(0, 4).toUpperCase();
+
+        List<UUID> variantIds = request.items().stream()
+                .map(CreateOrderRequest.OrderItemRequest::variantId)
+                .toList();
+
+        Map<UUID, ProductServiceClient.VariantInfo> variantMap = productServiceClient.getVariantsMap(variantIds);
 
         BigDecimal totalAmount = BigDecimal.ZERO;
         List<OrderItem> orderItems = new ArrayList<>();
@@ -50,27 +59,45 @@ public class OrderService {
                 .build();
 
         for (CreateOrderRequest.OrderItemRequest itemReq : request.items()) {
-            BigDecimal subtotal = itemReq.unitPrice().multiply(BigDecimal.valueOf(itemReq.quantity()));
+            ProductServiceClient.VariantInfo variant = variantMap.get(itemReq.variantId());
+            if (variant == null) {
+                throw ApiException.badRequest("Geçersiz Ürün", "Siparişteki ürün varyantı bulunamadı: " + itemReq.variantId());
+            }
+
+            BigDecimal authoritativePrice = variant.price();
+            if (authoritativePrice == null || authoritativePrice.compareTo(BigDecimal.ZERO) <= 0) {
+                throw ApiException.badRequest("Geçersiz Fiyat", "Ürün fiyatı geçersiz veya belirlenmemiş: " + variant.productName());
+            }
+
+            // Güvenlik Kontrolü (Price Tampering Koruması):
+            // Eğer istemci birim fiyat göndermişse ve gerçek fiyatla uyuşmuyorsa engelle
+            if (itemReq.unitPrice() != null && itemReq.unitPrice().compareTo(authoritativePrice) != 0) {
+                log.warn("[GÜVENLİK İHLALİ] Sipariş fiyat manipülasyonu engellendi! userId={}, variantId={}, gönderilen={}, gerçek={}",
+                        userId, itemReq.variantId(), itemReq.unitPrice(), authoritativePrice);
+                throw ApiException.badRequest("Fiyat Uyuşmazlığı", "Ürün fiyatı güncel değil veya değiştirilmiş. Gerçek fiyat: " + authoritativePrice);
+            }
+
+            BigDecimal subtotal = authoritativePrice.multiply(BigDecimal.valueOf(itemReq.quantity()));
             totalAmount = totalAmount.add(subtotal);
 
             OrderItem orderItem = OrderItem.builder()
                     .order(order)
-                    .variantId(itemReq.variantId())
-                    .productName(itemReq.productName())
-                    .sku(itemReq.sku())
+                    .variantId(variant.variantId())
+                    .productName(variant.productName())
+                    .sku(variant.sku())
                     .quantity(itemReq.quantity())
-                    .unitPrice(itemReq.unitPrice())
+                    .unitPrice(authoritativePrice)
                     .subtotal(subtotal)
                     .build();
 
             orderItems.add(orderItem);
 
             eventItemPayloads.add(new OrderCreatedPayload.OrderItemPayload(
-                    itemReq.variantId().toString(),
-                    itemReq.productName(),
-                    itemReq.sku(),
+                    variant.variantId().toString(),
+                    variant.productName(),
+                    variant.sku(),
                     itemReq.quantity(),
-                    itemReq.unitPrice()
+                    authoritativePrice
             ));
         }
 

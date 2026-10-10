@@ -27,17 +27,13 @@ public record CreateOrderRequest(
             @NotNull(message = "Varyant ID zorunludur")
             UUID variantId,
 
-            @NotBlank(message = "Ürün adı zorunludur")
             String productName,
 
-            @NotBlank(message = "SKU zorunludur")
             String sku,
 
             @Positive(message = "Adet 0'dan büyük olmalıdır")
             int quantity,
 
-            @NotNull(message = "Birim fiyat zorunludur")
-            @Positive(message = "Birim fiyat 0'dan büyük olmalıdır")
             BigDecimal unitPrice
     ) {}
 }
