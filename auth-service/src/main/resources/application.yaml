@@ -28,10 +28,10 @@ spring:
     open-in-view: false
     hibernate:
       ddl-auto: validate
-    show-sql: true
+    show-sql: ${SHOW_SQL:false}
 logging:
   level:
-    root: debug
+    root: ${LOG_LEVEL:info}
 rsa:
   private-key: ${RSA_PRIVATE_KEY:}
   public-key: ${RSA_PUBLIC_KEY:}

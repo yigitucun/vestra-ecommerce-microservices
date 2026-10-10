@@ -5,7 +5,7 @@ spring:
     banner-mode: off
 logging:
   level:
-    root: debug
+    root: ${LOG_LEVEL:info}
 
 services:
   auth-service-uri: ${SERVICES_AUTH_SERVICE_URI}

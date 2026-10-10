@@ -9,9 +9,11 @@ import jakarta.validation.constraints.Positive;
 import java.math.BigDecimal;
 import java.util.List;
 
+import jakarta.validation.constraints.Min;
+
 public record CreateVariantRequest(
         @NotNull @Positive BigDecimal price,
         @NotBlank @UniqueSKU String sku,
         List<@Valid CreateVariantAttributesRequest> attributes,
-        int initialStock
+        @Min(value = 0, message = "Başlangıç stoku negatif olamaz") int initialStock
 ) { }
